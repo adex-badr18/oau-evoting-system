@@ -1,0 +1,3 @@
+import { NextResponse } from "next/server";
+import { getDatabase } from "../../../../lib/database";
+export async function GET(_: Request, { params }: { params: Promise<{ electionId: string }> }) { const { electionId } = await params; const result = await getDatabase().query<{ report_data: unknown; content_hash: string; generated_at: Date }>(`SELECT report_data,content_hash,generated_at FROM reports WHERE election_id=$1`, [electionId]); if (result.rowCount !== 1) return NextResponse.json({ error: "Approved report not found." }, { status: 404 }); return NextResponse.json({ report: result.rows[0].report_data, contentHash: result.rows[0].content_hash, generatedAt: result.rows[0].generated_at }, { headers: { "Cache-Control": "public, max-age=300" } }); }

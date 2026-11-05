@@ -1,0 +1,13 @@
+OAU eVoting initial production administrator setup
+
+Use this file as a template only. Do not save a real password in this file or in the deployment ZIP.
+
+On the Ubuntu server, from the application directory:
+
+export ADMIN_EMAIL="INSERT_APPROVED_ADMIN_EMAIL"
+export ADMIN_NAME="OAU ICT Administrator"
+export ADMIN_PASSWORD="INSERT_A_NEW_UNIQUE_PASSWORD_OF_AT_LEAST_12_CHARACTERS"
+pnpm admin:create
+unset ADMIN_EMAIL ADMIN_NAME ADMIN_PASSWORD
+
+The administrator should sign in through /admin/login, change the initial password if required by policy, and enrol MFA before the portal is opened to users.
