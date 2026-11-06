@@ -1,22 +1,180 @@
+import Image from "next/image";
+import Link from "next/link";
 import { ElectionAdverts } from "./components/election-adverts";
+
 const capabilities = [
-  { number: "01", title: "Simple voter access", text: "Eligible voters receive a temporary password by email, create a private password, and cast one secure ballot." },
-  { number: "02", title: "Confident administration", text: "Election officers configure positions, candidates, voter eligibility, and voting times in one controlled workspace." },
-  { number: "03", title: "Clear, trusted results", text: "The public dashboard shows aggregate progress, while approved results are retained in a printable report repository." },
+  {
+    number: "01",
+    title: "Simple voter access",
+    text: "Eligible voters receive a temporary password by email, create a private password, and cast one secure ballot.",
+  },
+  {
+    number: "02",
+    title: "Confident administration",
+    text: "Election officers configure positions, candidates, voter eligibility, and voting times in one controlled workspace.",
+  },
+  {
+    number: "03",
+    title: "Clear, trusted results",
+    text: "The public dashboard shows aggregate progress, while approved results are retained in a printable report repository.",
+  },
 ];
 
 export default function HomePage() {
-  return <><header className="topbar welcome-topbar">
-    <div className="shell brand">
-      <a className="brand-title welcome-brand" href="/">
-      <img src="/images/oau-crest.png" alt="Obafemi Awolowo University crest" /><span>OAU eVoting System</span></a><nav className="nav">
-        <a href="#about">About</a><a href="/dashboard">Live results</a><a href="/vote">Voter sign in</a><a className="nav-admin" href="/admin">Admin sign in</a></nav>
-        </div></header><main><section className="welcome-hero"><div className="shell welcome-hero-grid"><div><div className="welcome-university"><img src="/images/oau-crest.png" alt="" /><p className="welcome-kicker">Obafemi Awolowo University</p></div>
-        <h1>Every vote counts. Every result is clear.</h1><p className="welcome-lead">OAU eVoting is the University platform for organised, transparent, and accountable elections - from voter registration to approved results.</p><div className="welcome-actions"><a className="welcome-primary" href="/vote">Sign in to vote</a><a className="welcome-secondary" href="/dashboard">View live results</a></div>
-        <p className="welcome-note">Use the personal voting link and temporary password sent to your registered email address.</p></div><aside className="welcome-assurance"><span className="assurance-mark" aria-hidden="true">OK</span><p className="eyebrow">Designed for confidence</p><h2>Built for University elections.</h2><ul><li>One ballot per eligible voter</li><li>Voting windows controlled by authorised officers</li><li>Secret ballots and aggregate results</li>
-        <li>Approved reports available for future reference</li></ul></aside></div></section><ElectionAdverts /><section id="about" className="shell welcome-section"><div className="section-intro"><p className="eyebrow">A better election experience</p><h2>One platform for voters, election officers, and the University community.</h2><p>Whether you are voting, administering an election, or monitoring official results, the platform gives you a direct and understandable path.</p></div>
-        <div className="welcome-capabilities">{capabilities.map((item) => <article className="welcome-capability" key={item.number}><span>{item.number}</span><h3>{item.title}</h3><p>{item.text}</p></article>)}</div></section><section className="welcome-process"><div className="shell"><div className="section-intro"><p className="eyebrow">How it works</p><h2>From invitation to official report.</h2></div><ol className="welcome-steps">
-          <li><strong>Receive your invitation</strong><span>Eligible voters receive an email with a temporary password.</span></li><li><strong>Sign in and vote</strong><span>Create a personal password, make your selections, and submit your ballot.</span></li><li><strong>Follow the election</strong><span>View live aggregate turnout and results while voting is in progress.</span></li><li><strong>Review the official record</strong><span>After approval, results are preserved in the report repository.</span></li></ol></div>
-          </section><section className="shell welcome-support"><div><p className="eyebrow">Need assistance?</p><h2>Support is available before voting closes.</h2><p>For help with your invitation or voter access, contact the University election support team.</p></div><a className="welcome-secondary" href="mailto:oahammed@oauife.edu.ng">Contact support</a></section></main><footer className="welcome-footer">
-            <div className="shell"><strong>OAU eVoting</strong><span>Managed by the Management Information Systems section of PBM/MISU and authorised Electoral Committee personnel.</span></div></footer></>;
+  return (
+    <>
+      <header className="topbar welcome-topbar">
+        <div className="shell brand">
+          <Link className="brand-title welcome-brand" href="/">
+            <Image
+              src="/images/oau-crest.png"
+              alt="Obafemi Awolowo University crest"
+              width={40}
+              height={40}
+            />
+            <span>OAU eVoting System</span>
+          </Link>
+          <nav className="nav">
+            <a href="#about">About</a>
+            <Link href="/dashboard">Live results</Link>
+            <Link href="/vote">Voter sign in</Link>
+            <Link className="nav-admin" href="/admin">
+              Admin sign in
+            </Link>
+          </nav>
+        </div>
+      </header>
+      <main>
+        <section className="welcome-hero">
+          <div className="shell welcome-hero-grid">
+            <div>
+              <div className="welcome-university">
+                <Image
+                  src="/images/oau-crest.png"
+                  alt=""
+                  width={40}
+                  height={40}
+                />
+                <p className="welcome-kicker">Obafemi Awolowo University</p>
+              </div>
+              <h1>Every vote counts. Every result is clear.</h1>
+              <p className="welcome-lead">
+                OAU eVoting is the University platform for organised,
+                transparent, and accountable elections - from voter registration
+                to approved results.
+              </p>
+              <div className="welcome-actions">
+                <Link className="welcome-primary" href="/vote">
+                  Sign in to vote
+                </Link>
+                <Link className="welcome-secondary" href="/dashboard">
+                  View live results
+                </Link>
+              </div>
+              <p className="welcome-note">
+                Use the personal voting link and temporary password sent to your
+                registered email address.
+              </p>
+            </div>
+            <aside className="welcome-assurance">
+              <span className="assurance-mark" aria-hidden="true">
+                OK
+              </span>
+              <p className="eyebrow">Designed for confidence</p>
+              <h2>Built for University elections.</h2>
+              <ul>
+                <li>One ballot per eligible voter</li>
+                <li>Voting windows controlled by authorised officers</li>
+                <li>Secret ballots and aggregate results</li>
+                <li>Approved reports available for future reference</li>
+              </ul>
+            </aside>
+          </div>
+        </section>
+        <ElectionAdverts />
+        <section id="about" className="shell welcome-section">
+          <div className="section-intro">
+            <p className="eyebrow">A better election experience</p>
+            <h2>
+              One platform for voters, election officers, and the University
+              community.
+            </h2>
+            <p>
+              Whether you are voting, administering an election, or monitoring
+              official results, the platform gives you a direct and
+              understandable path.
+            </p>
+          </div>
+          <div className="welcome-capabilities">
+            {capabilities.map((item) => (
+              <article className="welcome-capability" key={item.number}>
+                <span>{item.number}</span>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+        <section className="welcome-process">
+          <div className="shell">
+            <div className="section-intro">
+              <p className="eyebrow">How it works</p>
+              <h2>From invitation to official report.</h2>
+            </div>
+            <ol className="welcome-steps">
+              <li>
+                <strong>Receive your invitation</strong>
+                <span>
+                  Eligible voters receive an email with a temporary password.
+                </span>
+              </li>
+              <li>
+                <strong>Sign in and vote</strong>
+                <span>
+                  Create a personal password, make your selections, and submit
+                  your ballot.
+                </span>
+              </li>
+              <li>
+                <strong>Follow the election</strong>
+                <span>
+                  View live aggregate turnout and results while voting is in
+                  progress.
+                </span>
+              </li>
+              <li>
+                <strong>Review the official record</strong>
+                <span>
+                  After approval, results are preserved in the report
+                  repository.
+                </span>
+              </li>
+            </ol>
+          </div>
+        </section>
+        <section className="shell welcome-support">
+          <div>
+            <p className="eyebrow">Need assistance?</p>
+            <h2>Support is available before voting closes.</h2>
+            <p>
+              For help with your invitation or voter access, contact the
+              University election support team.
+            </p>
+          </div>
+          <a className="welcome-secondary" href="mailto:oahammed@oauife.edu.ng">
+            Contact support
+          </a>
+        </section>
+      </main>
+      <footer className="welcome-footer">
+        <div className="shell">
+          <strong>OAU eVoting</strong>
+          <span>
+            Managed by the Management Information Systems section of PBM/MISU
+            and authorised Electoral Committee personnel.
+          </span>
+        </div>
+      </footer>
+    </>
+  );
 }

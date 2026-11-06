@@ -1,19 +1,179 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 
-type Profile = { full_name: string; email: string; role: string; mfa_enabled: boolean };
+type Profile = {
+  full_name: string;
+  email: string;
+  role: string;
+  mfa_enabled: boolean;
+};
 type ProfileResponse = Profile | { error?: string };
-function isProfile(value: ProfileResponse): value is Profile { return "full_name" in value && "email" in value && "role" in value && "mfa_enabled" in value; }
+function isProfile(value: ProfileResponse): value is Profile {
+  return (
+    "full_name" in value &&
+    "email" in value &&
+    "role" in value &&
+    "mfa_enabled" in value
+  );
+}
 
 export default function AdminProfilePage() {
-  const [profile, setProfile] = useState<Profile | null>(null); const [error, setError] = useState(""); const [message, setMessage] = useState(""); const [busy, setBusy] = useState(false);
-  useEffect(() => { fetch("/api/admin/profile").then(async (response) => { const text = await response.text(); let data: ProfileResponse = {}; try { data = text ? JSON.parse(text) as ProfileResponse : {}; } catch { data = { error: "The server returned an unexpected response. Restart the local server and try again." }; } if (response.status === 401) { window.location.assign("/admin/login"); return; } if (!response.ok) { setError("error" in data ? data.error ?? "Unable to load your profile." : "Unable to load your profile."); return; } if (!isProfile(data)) { setError("The server returned an incomplete profile. Please restart the local server and try again."); return; } setProfile(data); }).catch(() => setError("Unable to load your profile. Please restart the local server and try again.")); }, []);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    fetch("/api/admin/profile")
+      .then(async (response) => {
+        const text = await response.text();
+        let data: ProfileResponse = {};
+        try {
+          data = text ? (JSON.parse(text) as ProfileResponse) : {};
+        } catch {
+          data = {
+            error:
+              "The server returned an unexpected response. Restart the local server and try again.",
+          };
+        }
+        if (response.status === 401) {
+          window.location.assign("/admin/login");
+          return;
+        }
+        if (!response.ok) {
+          setError(
+            "error" in data
+              ? (data.error ?? "Unable to load your profile.")
+              : "Unable to load your profile.",
+          );
+          return;
+        }
+        if (!isProfile(data)) {
+          setError(
+            "The server returned an incomplete profile. Please restart the local server and try again.",
+          );
+          return;
+        }
+        setProfile(data);
+      })
+      .catch(() =>
+        setError(
+          "Unable to load your profile. Please restart the local server and try again.",
+        ),
+      );
+  }, []);
   async function save(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setBusy(true); setError(""); setMessage(""); const form = new FormData(event.currentTarget);
-    const response = await fetch("/api/admin/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fullName: form.get("fullName"), email: form.get("email"), currentPassword: form.get("currentPassword"), newPassword: form.get("newPassword") }) });
-    const data = await response.json() as ProfileResponse; setBusy(false); if (!response.ok || !isProfile(data)) { setError("error" in data ? data.error ?? "Unable to save your profile." : "Unable to save your profile."); return; } setProfile(data); (event.target as HTMLFormElement).reset(); setMessage("Your administrator profile has been updated.");
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    setMessage("");
+    const form = new FormData(event.currentTarget);
+    const response = await fetch("/api/admin/profile", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fullName: form.get("fullName"),
+        email: form.get("email"),
+        currentPassword: form.get("currentPassword"),
+        newPassword: form.get("newPassword"),
+      }),
+    });
+    const data = (await response.json()) as ProfileResponse;
+    setBusy(false);
+    if (!response.ok || !isProfile(data)) {
+      setError(
+        "error" in data
+          ? (data.error ?? "Unable to save your profile.")
+          : "Unable to save your profile.",
+      );
+      return;
+    }
+    setProfile(data);
+    (event.target as HTMLFormElement).reset();
+    setMessage("Your administrator profile has been updated.");
   }
-  if (!profile) return <main className="shell"><section className="page-head"><h1>Loading profile...</h1>{error && <p className="error">{error}</p>}</section></main>;
-  return <><header className="topbar"><div className="shell brand"><a className="brand-title" href="/admin">OAU eVoting</a><nav className="nav"><a href="/admin">Admin workspace</a><a href="/dashboard">Public dashboard</a></nav></div></header><main className="shell"><section className="page-head"><div className="eyebrow">Administrator account</div><h1>My profile</h1><p>Role: {profile.role.replaceAll("_", " ")}. Confirm your current password before making changes.</p></section><section className="panel" style={{ maxWidth: 560 }}><form onSubmit={save}><label>Full name<input name="fullName" defaultValue={profile.full_name} required /></label><label>University email address<input name="email" type="email" defaultValue={profile.email} required /></label><label>Current password<input name="currentPassword" type="password" autoComplete="current-password" required /></label><label>New password <span style={{ fontWeight: 400 }}>(leave blank to keep current password)</span><input name="newPassword" type="password" minLength={12} autoComplete="new-password" /></label>{error && <p className="error">{error}</p>}{message && <p style={{ color: "#176b3a", fontSize: 14 }}>{message}</p>}<button className="action" disabled={busy} type="submit">{busy ? "Saving..." : "Save changes"}</button></form></section></main></>;
+  if (!profile)
+    return (
+      <main className="shell">
+        <section className="page-head">
+          <h1>Loading profile...</h1>
+          {error && <p className="error">{error}</p>}
+        </section>
+      </main>
+    );
+  return (
+    <>
+      <header className="topbar">
+        <div className="shell brand">
+          <Link className="brand-title" href="/admin">
+            OAU eVoting
+          </Link>
+          <nav className="nav">
+            <Link href="/admin">Admin workspace</Link>
+            <Link href="/dashboard">Public dashboard</Link>
+          </nav>
+        </div>
+      </header>
+      <main className="shell">
+        <section className="page-head">
+          <div className="eyebrow">Administrator account</div>
+          <h1>My profile</h1>
+          <p>
+            Role: {profile.role.replaceAll("_", " ")}. Confirm your current
+            password before making changes.
+          </p>
+        </section>
+        <section className="panel" style={{ maxWidth: 560 }}>
+          <form onSubmit={save}>
+            <label>
+              Full name
+              <input
+                name="fullName"
+                defaultValue={profile.full_name}
+                required
+              />
+            </label>
+            <label>
+              University email address
+              <input
+                name="email"
+                type="email"
+                defaultValue={profile.email}
+                required
+              />
+            </label>
+            <label>
+              Current password
+              <input
+                name="currentPassword"
+                type="password"
+                autoComplete="current-password"
+                required
+              />
+            </label>
+            <label>
+              New password{" "}
+              <span style={{ fontWeight: 400 }}>
+                (leave blank to keep current password)
+              </span>
+              <input
+                name="newPassword"
+                type="password"
+                minLength={12}
+                autoComplete="new-password"
+              />
+            </label>
+            {error && <p className="error">{error}</p>}
+            {message && (
+              <p style={{ color: "#176b3a", fontSize: 14 }}>{message}</p>
+            )}
+            <button className="action" disabled={busy} type="submit">
+              {busy ? "Saving..." : "Save changes"}
+            </button>
+          </form>
+        </section>
+      </main>
+    </>
+  );
 }

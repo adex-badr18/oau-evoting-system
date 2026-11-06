@@ -1,26 +1,255 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
 type Pack = {
   generatedAt: string;
-  election: { id: string; title: string; status: string; startsAt: string; endsAt: string; approvedAt: string | null };
-  voterImports: Array<{ filename: string; checksum: string; totalRows: number; validRows: number; rejectedRows: number; uploadedAt: string }>;
+  election: {
+    id: string;
+    title: string;
+    status: string;
+    startsAt: string;
+    endsAt: string;
+    approvedAt: string | null;
+  };
+  voterImports: Array<{
+    filename: string;
+    checksum: string;
+    totalRows: number;
+    validRows: number;
+    rejectedRows: number;
+    uploadedAt: string;
+  }>;
   credentialDelivery: Array<{ status: string; count: number }>;
-  turnout: { eligibleVoters: number; votersMarkedAsVoted: number; anonymousBallots: number; ballotsMatchVoters: boolean };
+  turnout: {
+    eligibleVoters: number;
+    votersMarkedAsVoted: number;
+    anonymousBallots: number;
+    ballotsMatchVoters: boolean;
+  };
   results: Array<{ position: string; candidate: string; votes: number }>;
   anonymousBallotRecords: Array<{ submittedAt: string; auditHash: string }>;
   report: { contentHash: string | null; generatedAt: string | null };
-  auditTimeline: Array<{ occurredAt: string; actorType: string; action: string; voterEmail: string | null; success: boolean }>;
+  auditTimeline: Array<{
+    occurredAt: string;
+    actorType: string;
+    action: string;
+    voterEmail: string | null;
+    success: boolean;
+  }>;
 };
 
 export default function VerificationPage() {
   const { electionId } = useParams<{ electionId: string }>();
-  const [pack, setPack] = useState<Pack | null>(null); const [error, setError] = useState("");
-  useEffect(() => { fetch(`/api/admin/elections/${electionId}/verification`, { cache: "no-store" }).then(async (response) => { const data = await response.json(); if (response.status === 401 || response.status === 403) { setError(data.error ?? "You are not authorised to view this verification pack."); return; } if (!response.ok) throw Error(data.error ?? "Unable to load verification pack."); setPack(data.pack); }).catch((cause: Error) => setError(cause.message)); }, [electionId]);
-  function download() { if (!pack) return; const file = new Blob([JSON.stringify(pack, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(file); const link = document.createElement("a"); link.href = url; link.download = `oau-evoting-verification-${pack.election.id}.json`; link.click(); URL.revokeObjectURL(url); }
-  if (error) return <main className="shell"><section className="page-head"><h1>Verification pack unavailable</h1><p className="error">{error}</p><a className="action" href="/admin">Return to administration</a></section></main>;
-  if (!pack) return <main className="shell"><p>Preparing confidential verification pack...</p></main>;
-  return <><header className="topbar no-print"><div className="shell brand"><a className="brand-title" href="/admin">OAU eVoting</a><div><button className="action" onClick={download}>Download JSON</button><button className="action" style={{ marginLeft: 10 }} onClick={() => window.print()}>Print</button></div></div></header><main className="shell"><section className="page-head"><div className="eyebrow">Restricted election assurance record</div><h1>Audit &amp; Verification Pack</h1><p>{pack.election.title} - generated {new Date(pack.generatedAt).toLocaleString()}. Voter email addresses appear only in the restricted audit timeline and are never stored with ballot selections.</p></section><section className="panel"><h2>Election and turnout reconciliation</h2><p>Voting period: {new Date(pack.election.startsAt).toLocaleString()} to {new Date(pack.election.endsAt).toLocaleString()}</p><div className="summary"><div className="metric"><span>Eligible voters</span><strong>{pack.turnout.eligibleVoters}</strong></div><div className="metric"><span>Voters recorded as submitted</span><strong>{pack.turnout.votersMarkedAsVoted}</strong></div><div className="metric"><span>Anonymous ballots</span><strong>{pack.turnout.anonymousBallots}</strong></div></div><p className={pack.turnout.ballotsMatchVoters ? "notice" : "error"}>{pack.turnout.ballotsMatchVoters ? "Integrity check passed: submitted-voter total equals anonymous-ballot total." : "Integrity check failed: the submitted-voter and ballot totals differ. Do not approve or publish this election until ICT investigates."}</p></section><section className="panel"><h2>Eligible-voter import evidence</h2>{pack.voterImports.length ? pack.voterImports.map((item, index) => <article key={`${item.checksum}-${index}`} className="card"><p><strong>Source file:</strong> {item.filename}<br /><strong>Uploaded:</strong> {new Date(item.uploadedAt).toLocaleString()}<br /><strong>Rows:</strong> {item.totalRows}; accepted: {item.validRows}; rejected: {item.rejectedRows}<br /><strong>SHA-256 checksum:</strong> <span style={{ wordBreak: "break-all" }}>{item.checksum}</span></p></article>) : <p>No voter-import batch is available. The voter data may have been anonymised after approval.</p>}</section><section className="panel"><h2>Credential-delivery summary</h2>{pack.credentialDelivery.map((item) => <p key={item.status}><strong>{item.status}:</strong> {item.count}</p>)}{!pack.credentialDelivery.length && <p>No credential delivery records are available.</p>}</section><section className="panel"><h2>Results reconciliation</h2>{pack.results.map((item, index) => <p key={`${item.position}-${item.candidate}-${index}`}><strong>{item.position}:</strong> {item.candidate} - {item.votes} vote(s)</p>)}</section><section className="panel"><h2>Anonymous ballot time and fingerprint register</h2><p>Each line is a timestamped anonymous ballot record. It contains no voter name, email address, or candidate selection. It is available only after closure to prevent live-voting pressure or coercion.</p>{pack.anonymousBallotRecords.map((item, index) => <p key={`${item.submittedAt}-${item.auditHash}`}><strong>{index + 1}.</strong> {new Date(item.submittedAt).toLocaleString()}<br /><span style={{ wordBreak: "break-all" }}>{item.auditHash}</span></p>)}</section><section className="panel"><h2>Approved report integrity</h2>{pack.report.contentHash ? <><p>The official report has SHA-256 hash:</p><p style={{ wordBreak: "break-all" }}>{pack.report.contentHash}</p></> : <p>This election has closed but has not yet been approved, so no official report hash exists.</p>}</section><section className="panel"><h2>Audit timeline</h2><p>Voter entries include the registered email address for accountability. No candidate selections, receipt references, or ballot fingerprints are shown in this timeline.</p>{pack.auditTimeline.map((item, index) => <p key={`${item.occurredAt}-${item.action}-${index}`}>{new Date(item.occurredAt).toLocaleString()} - <strong>{item.action.replaceAll("_", " ")}</strong> ({item.actorType}{item.voterEmail ? `; ${item.voterEmail}` : ""}; {item.success ? "successful" : "failed"})</p>)}</section></main></>;
+  const [pack, setPack] = useState<Pack | null>(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    fetch(`/api/admin/elections/${electionId}/verification`, {
+      cache: "no-store",
+    })
+      .then(async (response) => {
+        const data = await response.json();
+        if (response.status === 401 || response.status === 403) {
+          setError(
+            data.error ??
+              "You are not authorised to view this verification pack.",
+          );
+          return;
+        }
+        if (!response.ok)
+          throw Error(data.error ?? "Unable to load verification pack.");
+        setPack(data.pack);
+      })
+      .catch((cause: Error) => setError(cause.message));
+  }, [electionId]);
+  function download() {
+    if (!pack) return;
+    const file = new Blob([JSON.stringify(pack, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(file);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `oau-evoting-verification-${pack.election.id}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+  if (error)
+    return (
+      <main className="shell">
+        <section className="page-head">
+          <h1>Verification pack unavailable</h1>
+          <p className="error">{error}</p>
+          <Link className="action" href="/admin">
+            Return to administration
+          </Link>
+        </section>
+      </main>
+    );
+  if (!pack)
+    return (
+      <main className="shell">
+        <p>Preparing confidential verification pack...</p>
+      </main>
+    );
+  return (
+    <>
+      <header className="topbar no-print">
+        <div className="shell brand">
+          <Link className="brand-title" href="/admin">
+            OAU eVoting
+          </Link>
+          <div>
+            <button className="action" onClick={download}>
+              Download JSON
+            </button>
+            <button
+              className="action"
+              style={{ marginLeft: 10 }}
+              onClick={() => window.print()}
+            >
+              Print
+            </button>
+          </div>
+        </div>
+      </header>
+      <main className="shell">
+        <section className="page-head">
+          <div className="eyebrow">Restricted election assurance record</div>
+          <h1>Audit &amp; Verification Pack</h1>
+          <p>
+            {pack.election.title} - generated{" "}
+            {new Date(pack.generatedAt).toLocaleString()}. Voter email addresses
+            appear only in the restricted audit timeline and are never stored
+            with ballot selections.
+          </p>
+        </section>
+        <section className="panel">
+          <h2>Election and turnout reconciliation</h2>
+          <p>
+            Voting period: {new Date(pack.election.startsAt).toLocaleString()}{" "}
+            to {new Date(pack.election.endsAt).toLocaleString()}
+          </p>
+          <div className="summary">
+            <div className="metric">
+              <span>Eligible voters</span>
+              <strong>{pack.turnout.eligibleVoters}</strong>
+            </div>
+            <div className="metric">
+              <span>Voters recorded as submitted</span>
+              <strong>{pack.turnout.votersMarkedAsVoted}</strong>
+            </div>
+            <div className="metric">
+              <span>Anonymous ballots</span>
+              <strong>{pack.turnout.anonymousBallots}</strong>
+            </div>
+          </div>
+          <p className={pack.turnout.ballotsMatchVoters ? "notice" : "error"}>
+            {pack.turnout.ballotsMatchVoters
+              ? "Integrity check passed: submitted-voter total equals anonymous-ballot total."
+              : "Integrity check failed: the submitted-voter and ballot totals differ. Do not approve or publish this election until ICT investigates."}
+          </p>
+        </section>
+        <section className="panel">
+          <h2>Eligible-voter import evidence</h2>
+          {pack.voterImports.length ? (
+            pack.voterImports.map((item, index) => (
+              <article key={`${item.checksum}-${index}`} className="card">
+                <p>
+                  <strong>Source file:</strong> {item.filename}
+                  <br />
+                  <strong>Uploaded:</strong>{" "}
+                  {new Date(item.uploadedAt).toLocaleString()}
+                  <br />
+                  <strong>Rows:</strong> {item.totalRows}; accepted:{" "}
+                  {item.validRows}; rejected: {item.rejectedRows}
+                  <br />
+                  <strong>SHA-256 checksum:</strong>{" "}
+                  <span style={{ wordBreak: "break-all" }}>
+                    {item.checksum}
+                  </span>
+                </p>
+              </article>
+            ))
+          ) : (
+            <p>
+              No voter-import batch is available. The voter data may have been
+              anonymised after approval.
+            </p>
+          )}
+        </section>
+        <section className="panel">
+          <h2>Credential-delivery summary</h2>
+          {pack.credentialDelivery.map((item) => (
+            <p key={item.status}>
+              <strong>{item.status}:</strong> {item.count}
+            </p>
+          ))}
+          {!pack.credentialDelivery.length && (
+            <p>No credential delivery records are available.</p>
+          )}
+        </section>
+        <section className="panel">
+          <h2>Results reconciliation</h2>
+          {pack.results.map((item, index) => (
+            <p key={`${item.position}-${item.candidate}-${index}`}>
+              <strong>{item.position}:</strong> {item.candidate} - {item.votes}{" "}
+              vote(s)
+            </p>
+          ))}
+        </section>
+        <section className="panel">
+          <h2>Anonymous ballot time and fingerprint register</h2>
+          <p>
+            Each line is a timestamped anonymous ballot record. It contains no
+            voter name, email address, or candidate selection. It is available
+            only after closure to prevent live-voting pressure or coercion.
+          </p>
+          {pack.anonymousBallotRecords.map((item, index) => (
+            <p key={`${item.submittedAt}-${item.auditHash}`}>
+              <strong>{index + 1}.</strong>{" "}
+              {new Date(item.submittedAt).toLocaleString()}
+              <br />
+              <span style={{ wordBreak: "break-all" }}>{item.auditHash}</span>
+            </p>
+          ))}
+        </section>
+        <section className="panel">
+          <h2>Approved report integrity</h2>
+          {pack.report.contentHash ? (
+            <>
+              <p>The official report has SHA-256 hash:</p>
+              <p style={{ wordBreak: "break-all" }}>
+                {pack.report.contentHash}
+              </p>
+            </>
+          ) : (
+            <p>
+              This election has closed but has not yet been approved, so no
+              official report hash exists.
+            </p>
+          )}
+        </section>
+        <section className="panel">
+          <h2>Audit timeline</h2>
+          <p>
+            Voter entries include the registered email address for
+            accountability. No candidate selections, receipt references, or
+            ballot fingerprints are shown in this timeline.
+          </p>
+          {pack.auditTimeline.map((item, index) => (
+            <p key={`${item.occurredAt}-${item.action}-${index}`}>
+              {new Date(item.occurredAt).toLocaleString()} -{" "}
+              <strong>{item.action.replaceAll("_", " ")}</strong> (
+              {item.actorType}
+              {item.voterEmail ? `; ${item.voterEmail}` : ""};{" "}
+              {item.success ? "successful" : "failed"})
+            </p>
+          ))}
+        </section>
+      </main>
+    </>
+  );
 }

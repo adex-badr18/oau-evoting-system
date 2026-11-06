@@ -1,6 +1,103 @@
 "use client";
+
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
-type Report={title:string;startsAt:string;endsAt:string;approvedAt:string;eligibleVoters:number;ballotsSubmitted:number;turnout:number;results:Array<{position:string;candidate:string;votes:number}>};
-export default function ReportPage(){const {electionId}=useParams<{electionId:string}>();const [report,setReport]=useState<Report|null>(null);const [hash,setHash]=useState("");const [error,setError]=useState("");useEffect(()=>{fetch(`/api/reports/${electionId}`).then(async r=>{const data=await r.json();if(!r.ok)throw Error(data.error);setReport(data.report);setHash(data.contentHash);}).catch(e=>setError(e.message));},[electionId]);if(error)return <main className="shell"><p className="error">{error}</p></main>;if(!report)return <main className="shell"><p>Loading approved report...</p></main>;return <><header className="topbar no-print"><div className="shell brand"><a className="brand-title" href="/">OAU eVoting</a><button className="action" onClick={()=>window.print()}>Print or save as PDF</button></div></header><main className="shell"><section className="page-head"><div className="eyebrow">Official approved result</div><h1>{report.title}</h1><p>Approved {new Date(report.approvedAt).toLocaleString()}</p></section><section className="panel"><h2>Election summary</h2><p>Voting period: {new Date(report.startsAt).toLocaleString()} to {new Date(report.endsAt).toLocaleString()}</p><div className="summary"><div className="metric"><span>Eligible voters</span><strong>{report.eligibleVoters}</strong></div><div className="metric"><span>Ballots submitted</span><strong>{report.ballotsSubmitted}</strong></div><div className="metric"><span>Turnout</span><strong>{report.turnout}%</strong></div></div></section><section className="panel"><h2>Results by position</h2>{report.results.map((result,index)=><p key={`${result.position}-${result.candidate}-${index}`}><strong>{result.position}:</strong> {result.candidate} - {result.votes} vote(s)</p>)}</section><section className="panel"><h2>Report integrity</h2><p>This approved report is protected by the following SHA-256 integrity hash:</p><p style={{wordBreak:"break-all"}}>{hash}</p></section></main></>}
+type Report = {
+  title: string;
+  startsAt: string;
+  endsAt: string;
+  approvedAt: string;
+  eligibleVoters: number;
+  ballotsSubmitted: number;
+  turnout: number;
+  results: Array<{ position: string; candidate: string; votes: number }>;
+};
+export default function ReportPage() {
+  const { electionId } = useParams<{ electionId: string }>();
+  const [report, setReport] = useState<Report | null>(null);
+  const [hash, setHash] = useState("");
+  const [error, setError] = useState("");
+  useEffect(() => {
+    fetch(`/api/reports/${electionId}`)
+      .then(async (r) => {
+        const data = await r.json();
+        if (!r.ok) throw Error(data.error);
+        setReport(data.report);
+        setHash(data.contentHash);
+      })
+      .catch((e) => setError(e.message));
+  }, [electionId]);
+  if (error)
+    return (
+      <main className="shell">
+        <p className="error">{error}</p>
+      </main>
+    );
+  if (!report)
+    return (
+      <main className="shell">
+        <p>Loading approved report...</p>
+      </main>
+    );
+  return (
+    <>
+      <header className="topbar no-print">
+        <div className="shell brand">
+          <Link className="brand-title" href="/">
+            OAU eVoting
+          </Link>
+          <button className="action" onClick={() => window.print()}>
+            Print or save as PDF
+          </button>
+        </div>
+      </header>
+      <main className="shell">
+        <section className="page-head">
+          <div className="eyebrow">Official approved result</div>
+          <h1>{report.title}</h1>
+          <p>Approved {new Date(report.approvedAt).toLocaleString()}</p>
+        </section>
+        <section className="panel">
+          <h2>Election summary</h2>
+          <p>
+            Voting period: {new Date(report.startsAt).toLocaleString()} to{" "}
+            {new Date(report.endsAt).toLocaleString()}
+          </p>
+          <div className="summary">
+            <div className="metric">
+              <span>Eligible voters</span>
+              <strong>{report.eligibleVoters}</strong>
+            </div>
+            <div className="metric">
+              <span>Ballots submitted</span>
+              <strong>{report.ballotsSubmitted}</strong>
+            </div>
+            <div className="metric">
+              <span>Turnout</span>
+              <strong>{report.turnout}%</strong>
+            </div>
+          </div>
+        </section>
+        <section className="panel">
+          <h2>Results by position</h2>
+          {report.results.map((result, index) => (
+            <p key={`${result.position}-${result.candidate}-${index}`}>
+              <strong>{result.position}:</strong> {result.candidate} -{" "}
+              {result.votes} vote(s)
+            </p>
+          ))}
+        </section>
+        <section className="panel">
+          <h2>Report integrity</h2>
+          <p>
+            This approved report is protected by the following SHA-256 integrity
+            hash:
+          </p>
+          <p style={{ wordBreak: "break-all" }}>{hash}</p>
+        </section>
+      </main>
+    </>
+  );
+}
